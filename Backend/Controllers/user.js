@@ -35,7 +35,7 @@ exports.signup = (req, res, next) => {
 
 exports.login = (req, res, next) => {
   try {
-    const secretKey = process.env.SECRET_KEY;
+    const secretKey = "RANDOM_SECRET_KEY";
     User.findOne({ email: req.body.email })
       .then((user) => {
         if (!user) {
@@ -58,7 +58,7 @@ exports.login = (req, res, next) => {
               ),
             });
           })
-          .catch((error) => res.status(500).json({ error }));
+        .catch((error) => res.status(501).json({ "error": process.env }));
       })
       .catch((error) => res.status(500).json({ error }));
   } catch {
