@@ -3,67 +3,59 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
-
+let emailRegExp =  new RegExp('^[a-zA-Z0-9.-_-]+@[a-zA-Z0-9.-_]+.[a-z]{2,}$');
 
 require("dotenv").config();
 
 
-exports.signup = (req, res, next) => {
+exports.signup = async (req, res, next) => {
   try {
-    bcrypt
-      .hash(req.body.password, 10)
-      .then((hash) => {
-        const user = new User({
-          email: req.body.email,
-          password: hash,
+    console.log(req)
+    let hash = await bcrypt.hash(req.body.password, 10);
+    console.log(hash)
+    const user = new User({
+        email: req.body.email,
+        password: hash,
         });
-        user
-          .save()
-          .then(() => res.status(201).json({ message: "Utilisateur créé !" }))
-          .catch((error) => res.status(401).json({ error }));
-      })
-      .catch((error) => {
-        res.status(500).json({ error });
-      });
-  } catch {
+    if (emailRegExp.test(req.body.email)){
+        user.save()         
+        res.status(201).json({ message: "Utilisateur créé !" })
+    }
+  } catch(e) {
+    console.log(e.message)
     res.status(500).json({
-      error: new Error("Erreur server"),
+      error: e.message,
     });
   }
 };
 
 
-exports.login = (req, res, next) => {
-  try {
-    const secretKey = "RANDOM_SECRET_KEY";
-    User.findOne({ email: req.body.email })
-      .then((user) => {
+exports.login = async (req, res, next) => {
+    try {
+        console.log(req)
+        const secretKey = "RANDOM_SECRET_KEY"; 
+        const user = await User.findOne({ email: req.body.email })
         if (!user) {
-          return res.status(401).json({ error: "utilisateur inconnu" });
+            return res.status(401).json({ error: "utilisateur inconnu" });
         }
-        bcrypt
-          .compare(req.body.password, user.password)
-          .then((valid) => {
-            if (!valid) {
-              return res.status(401).json({ error: "Mot de passe incorrect" });
-            }
-            res.status(200).json({
-              userId: user._id,
-              token: jwt.sign(
+        const valid = await bcrypt.compare(req.body.password, user.password)
+        if (!valid) {
+            return res.status(401).json({ error: "Mot de passe incorrect" });
+        }
+        res.status(200).json({
+            userId: user._id,
+            token: jwt.sign(
                 {
-                  userId: user._id,
+                    userId: user._id,
                 },
                 secretKey,
                 { expiresIn: "24h" }
-              ),
+                ),
             });
-          })
-        .catch((error) => res.status(501).json({ "error": process.env }));
-      })
-      .catch((error) => res.status(500).json({ error }));
-  } catch {
-    res.status(500).json({
-      error: new Error("Erreur server"),
-    });
-  }
+    } catch(e) {
+        console.log(e.message)
+        res.status(500).json({
+            error: e.message,
+        });
+    }
 };

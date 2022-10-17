@@ -1,11 +1,18 @@
 const express = require('express');
 const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
 const app = express();
 
 const sauceRoutes = require('./routes/sauce');
 const userRoutes = require("./routes/user");
 const path = require("path");
-app.use(express.json());
+//const multer = require("./middleware/multer-config");
+//var upload = multer();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:true}));
+//app.use(upload.array());
+//app.use(express.static("public"));
+//app.use(express.json());
 
 
 mongoose.connect('mongodb+srv://Bauwst:JB27UUKX@cluster0.7e3lnda.mongodb.net/?retryWrites=true&w=majority',
@@ -23,6 +30,6 @@ app.use((req, res, next) => {
 app.use("/images", express.static(path.join(__dirname, "images")));
 app.use('/api/sauces', sauceRoutes);
 app.use("/api/auth", userRoutes);
-//app.use(bodyParser.json());
+
 
 module.exports = app;

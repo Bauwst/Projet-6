@@ -3,42 +3,71 @@ const Sauce = require('../models/Sauce');
 
 const fs = require("fs");
 
-exports.createSauce = (req, res, next) => {
+exports.createSauce = async (req, res, next) => {
   try {
-    const sauceObject = JSON.parse(req.body.sauce);
-    delete sauceObject._id; 
+    const sauceName = req.body.sauce;
+    const userId = req.auth.userId;
     const sauce = new Sauce({
-      ...sauceObject,
-      imageUrl: `${req.protocol}://${req.get("host")}/images/${
-        req.file.filename
-      }`, 
+      userId: userId,
+      name: sauceName,
+      imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`, 
       likes: 0,
       dislikes: 0,
+      usersLiked: [] ,
+      usersDisliked: [] 
     });
-    sauce
-      .save()
-      .then(() => res.status(201).json({ message: "Objet enregistré !" }))
-      .catch((error) => res.status(400).json({ error }));
-  } catch {
-    res.status(500).json({
-      error: new Error("Erreur server"),
+    await sauce.save()
+    res.status(201).json({ message: "Objet enregistré !" })
+  } catch(e) {
+    res.status(400).json({
+      error: e.message,
     });
   }
 };
 
-exports.getOneSauce = (req, res, next) => {
+exports.getOneSauce = async (req, res, next) => {
   try {
-    Sauce.findOne({
-      _id: req.params.id,
-    })
-      .then((sauce) => {
-        res.status(200).json(sauce);
-      })
-      .catch((error) => {
-        res.status(404).json({
-          error: error,
-        });
+    const result = await Sauce.findOne({
+      _id: req.params.id
+    });
+    if (result){
+      res.status(201).json(result);
+    } else res.status(404);
+  } catch(e){
+    res.status(500).json({
+      error: e.message
+    });
+  }
+};
+
+exports.modifySauce = async (req, res, next) => {
+  try {
+    const sauce = await Sauce.findOne({ _id: req.params.id })
+    if (!sauce) {
+      res.status(404).json({
+        error: new Error("sauce non trouvée"),
       });
+    } else if (sauce.userId !== req.auth.userId) {
+      res.status(403).json({
+        error: new Error("403: unauthorized request"),
+      });
+    } else {
+      if (req.file) {
+        delFile(req.params.id); 
+      }
+      const sauceObject = req.file 
+      ? 
+      {
+        ...JSON.parse(req.body.sauce),
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${
+        req.file.filename
+      }`,
+    }
+    : 
+    { ...req.body };
+    await Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
+      res.status(200).json({ message: "Objet modifié !" })
+    }
   } catch {
     res.status(500).json({
       error: new Error("Erreur server"),
@@ -46,45 +75,6 @@ exports.getOneSauce = (req, res, next) => {
   }
 };
 
-exports.modifySauce = (req, res, next) => {
-  try {
-    Sauce.findOne({ _id: req.params.id }).then((sauce) => {
-      if (!sauce) {
-        res.status(404).json({
-          error: new Error("sauce non trouvée"),
-        });
-      } else if (sauce.userId !== req.auth.userId) {
-        res.status(403).json({
-          error: new Error("403: unauthorized request"),
-        });
-      } else {
-        if (req.file) {
-          delFile(req.params.id); 
-        }
-        const sauceObject = req.file 
-          ? 
-            {
-              ...JSON.parse(req.body.sauce),
-              imageUrl: `${req.protocol}://${req.get("host")}/images/${
-                req.file.filename
-              }`,
-            }
-          : 
-            { ...req.body };
-        Sauce.updateOne(
-          { _id: req.params.id },
-          { ...sauceObject, _id: req.params.id }
-        )
-          .then(() => res.status(200).json({ message: "Objet modifié !" }))
-          .catch((error) => res.status(400).json({ error }));
-      }
-    });
-  } catch {
-    res.status(500).json({
-      error: new Error("Erreur server"),
-    });
-  }
-};
 
 function delFile(sauceId) {
   try {
@@ -98,9 +88,9 @@ function delFile(sauceId) {
 }
 
 
-exports.deleteSauce = (req, res, next) => {
+exports.deleteSauce = async (req, res, next) => {
   try {
-    Sauce.findOne({ _id: req.params.id }).then((sauce) => {
+    const sauce = await Sauce.findOne({ _id: req.params.id })
       if (!sauce) {
         res.status(404).json({
           error: new Error("sauce non trouvée"),
@@ -123,7 +113,6 @@ exports.deleteSauce = (req, res, next) => {
             });
           });
       }
-    });
   } catch {
     res.status(500).json({
       error: new Error("Erreur server"),
@@ -131,20 +120,15 @@ exports.deleteSauce = (req, res, next) => {
   }
 };
 
-exports.getAllSauce = (req, res, next) => {
+exports.getAllSauce =  async (req, res, next) => {
   try {
-    Sauce.find()
-      .then((sauces) => {
-        res.status(200).json(sauces);
-      })
-      .catch((error) => {
-        res.status(400).json({
-          error: error,
-        });
-      });
-  } catch {
+    const sauces = await Sauce.find()
+    if (sauces){
+      res.status(200).json(sauces);
+    } else res.status(404);
+  } catch(e) {
     res.status(500).json({
-      error: new Error("Erreur server"),
+      error: e.message,
     });
   }
 };
