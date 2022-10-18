@@ -16,6 +16,8 @@ exports.signup = async (req, res, next) => {
     if (emailRegExp.test(req.body.email)){
         user.save()         
         res.status(201).json({ message: "Utilisateur créé !" })
+    } else {
+        res.status(400).json ({message: "Veuillez entrer un email valide"})
     }
   } catch(e) {
     console.log(e.message)
