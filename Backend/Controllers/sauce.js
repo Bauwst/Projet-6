@@ -132,36 +132,36 @@ exports.createLike = async (req, res, next) => {
     const userId = req.body.userId; 
     const sauce = await Sauce.findOne({ _id: sauceId });
     const updateSauce = await Sauce.updateOne({ _id: sauceId }, sauce);
-        let tabLikeIndex = sauce.usersLiked.indexOf(userId);
-        let tabDisLikeIndex = sauce.usersDisliked.indexOf(userId);
-        sauce;
-        switch (likeValue) {
-          case 1: 
-            if (tabLikeIndex === -1) {
-              sauce.usersLiked.push(userId);
-              sauce.likes += 1;
-            }
-            break;
-          case -1: 
-            if (tabDisLikeIndex === -1) {
-              sauce.usersDisliked.push(userId);
-              sauce.dislikes += 1;
-            }
-            break;
-          case 0: 
-            if (tabLikeIndex !== -1) {
-              sauce.usersLiked.splice(tabLikeIndex, 1);
-              sauce.likes -= 1;
-            }
-            else if (tabDisLikeIndex !== -1) {
-              sauce.usersDisliked.splice(tabDisLikeIndex, 1);
-              sauce.dislikes -= 1;
-            }
-            break;
-          default: 
-        }
-        updateSauce;
-        res.status(200).json({ message: "like pris en compte" });
+    let tabLikeIndex = sauce.usersLiked.indexOf(userId);
+    let tabDisLikeIndex = sauce.usersDisliked.indexOf(userId);
+    sauce;
+    switch (likeValue) {
+      case 1: 
+      if (tabLikeIndex === -1) {
+        sauce.usersLiked.push(userId);
+        sauce.likes += 1;
+      }
+      break;
+      case -1: 
+      if (tabDisLikeIndex === -1) {
+        sauce.usersDisliked.push(userId);
+        sauce.dislikes += 1;
+      }
+      break;
+      case 0: 
+      if (tabLikeIndex !== -1) {
+        sauce.usersLiked.splice(tabLikeIndex, 1);
+        sauce.likes -= 1;
+      }
+      else if (tabDisLikeIndex !== -1) {
+        sauce.usersDisliked.splice(tabDisLikeIndex, 1);
+        sauce.dislikes -= 1;
+      }
+      break;
+      default: 
+    }
+    updateSauce;
+    res.status(200).json({ message: "like pris en compte" });
   } catch(e) {
     res.status(500).json({
       error: e.message,
