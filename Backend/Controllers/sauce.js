@@ -59,13 +59,11 @@ exports.modifySauce = async (req, res, next) => {
       ? 
       {
         ...JSON.parse(req.body.sauce),
-        imageUrl: `${req.protocol}://${req.get("host")}/images/${
-        req.file.filename
-      }`,
-    }
-    : 
-    { ...req.body };
-    await Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
+      }
+      : 
+      { ...req.body };
+      await Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id });
       res.status(200).json({ message: "Objet modifié !" })
     }
   } catch {
@@ -91,28 +89,22 @@ function delFile(sauceId) {
 exports.deleteSauce = async (req, res, next) => {
   try {
     const sauce = await Sauce.findOne({ _id: req.params.id })
-      if (!sauce) {
-        res.status(404).json({
-          error: new Error("sauce non trouvée"),
-        });
-      } else if (sauce.userId !== req.auth.userId) {
-        res.status(403).json({
-          error: new Error("403: unauthorized request"),
-        });
-      } else {
-        delFile(req.params.id);
-        Sauce.deleteOne({ _id: req.params.id })
-          .then(() => {
-            res.status(200).json({
-              message: "Deleted!",
-            });
-          })
-          .catch((error) => {
-            res.status(400).json({
-              error: error,
-            });
-          });
-      }
+    const deleteSauce = await Sauce.deleteOne({ _id: req.params.id });
+    if (!sauce) {
+      res.status(404).json({
+        error: new Error("sauce non trouvée"),
+      });
+    } else if (sauce.userId !== req.auth.userId) {
+      res.status(403).json({
+        error: new Error("403: unauthorized request"),
+      });
+    } else {
+      delFile(req.params.id);
+      deleteSauce;
+      res.status(200).json({
+        message: "Deleted!",
+      });
+    }
   } catch {
     res.status(500).json({
       error: new Error("Erreur server"),
@@ -133,16 +125,16 @@ exports.getAllSauce =  async (req, res, next) => {
   }
 };
 
-exports.createLike = (req, res, next) => {
+exports.createLike = async (req, res, next) => {
   try {
     const sauceId = req.params.id; 
     const likeValue = req.body.like; 
     const userId = req.body.userId; 
-
-    Sauce.findOne({ _id: sauceId })
-      .then((sauce) => {
+    const sauce = await Sauce.findOne({ _id: sauceId });
+    const updateSauce = await Sauce.updateOne({ _id: sauceId }, sauce);
         let tabLikeIndex = sauce.usersLiked.indexOf(userId);
         let tabDisLikeIndex = sauce.usersDisliked.indexOf(userId);
+        sauce;
         switch (likeValue) {
           case 1: 
             if (tabLikeIndex === -1) {
@@ -162,22 +154,17 @@ exports.createLike = (req, res, next) => {
               sauce.likes -= 1;
             }
             else if (tabDisLikeIndex !== -1) {
-
               sauce.usersDisliked.splice(tabDisLikeIndex, 1);
-
               sauce.dislikes -= 1;
             }
             break;
           default: 
         }
-        Sauce.updateOne({ _id: sauceId }, sauce)
-          .then(() => res.status(200).json({ message: "like pris en compte" }))
-          .catch((error) => res.status(400).json({ error }));
-      })
-      .catch((error) => res.status(400).json({ error }));
-  } catch {
+        updateSauce;
+        res.status(200).json({ message: "like pris en compte" });
+  } catch(e) {
     res.status(500).json({
-      error: new Error("Erreur server"),
+      error: e.message,
     });
   }
 };

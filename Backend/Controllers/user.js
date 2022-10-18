@@ -1,12 +1,8 @@
 const bcrypt = require("bcrypt");
-
 const jwt = require("jsonwebtoken");
-
 const User = require("../models/User");
 let emailRegExp =  new RegExp('^[a-zA-Z0-9.-_-]+@[a-zA-Z0-9.-_]+.[a-z]{2,}$');
-
 require("dotenv").config();
-
 
 exports.signup = async (req, res, next) => {
   try {
