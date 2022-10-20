@@ -2,25 +2,23 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 let emailRegExp =  new RegExp('^[a-zA-Z0-9.-_-]+@[a-zA-Z0-9.-_]+.[a-z]{2,}$');
+let mdpRegExp = new RegExp ('^[A-Za-zÀ-ÖØ-öø-ÿ0-9 -]{2,60}$');
 require("dotenv").config();
 
 exports.signup = async (req, res, next) => {
   try {
-    console.log(req)
     let hash = await bcrypt.hash(req.body.password, 10);
-    console.log(hash)
     const user = new User({
         email: req.body.email,
         password: hash,
         });
-    if (emailRegExp.test(req.body.email)){
+    if (emailRegExp.test(req.body.email) && mdpRegExp.test(req.body.password)){
         user.save()         
         res.status(201).json({ message: "Utilisateur créé !" })
     } else {
-        res.status(401).json ({ message: "Veuillez entrer un email valide" })
+        res.status(401).json ({ message: "Email ou mot de passe invalide..." })
     }
   } catch(e) {
-    console.log(e.message)
     res.status(500).json({
       error: e.message,
     });
@@ -30,8 +28,10 @@ exports.signup = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
     try {
-        console.log(req)
         const secretKey = "RANDOM_SECRET_KEY"; 
+        if(!emailRegExp.test(req.body.email) || !mdpRegExp.test(req.body.password)){
+            return res.status(401).json ({ message: "Email ou mot de passe invalide..." })
+        }
         const user = await User.findOne({ email: req.body.email })
         if (!user) {
             return res.status(401).json({ error: "utilisateur inconnu" });
@@ -51,7 +51,6 @@ exports.login = async (req, res, next) => {
                 ),
             });
     } catch(e) {
-        console.log(e.message)
         res.status(500).json({
             error: e.message,
         });
