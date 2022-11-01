@@ -6,11 +6,8 @@ const fs = require("fs").promises;
 exports.createSauce = async (req, res, next) => {
 
   try {
-    // console.log(req);
-    // console.log(req.body.sauce.name);
     const userId = req.auth.userId;
     const payLoad = JSON.parse(req.body.sauce);
-    console.log(payLoad);
     const sauce = new Sauce({
       userId: userId,
       name: payLoad.name,
