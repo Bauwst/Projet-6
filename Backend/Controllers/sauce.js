@@ -6,10 +6,11 @@ const fs = require("fs").promises;
 exports.createSauce = async (req, res, next) => {
 
   try {
-    console.log(req);
-    console.log(req.body.sauce.name);
+    // console.log(req);
+    // console.log(req.body.sauce.name);
     const userId = req.auth.userId;
     const payLoad = JSON.parse(req.body.sauce);
+    console.log(payLoad);
     const sauce = new Sauce({
       userId: userId,
       name: payLoad.name,
@@ -62,7 +63,7 @@ exports.modifySauce = async (req, res, next) => {
       });
     } else {
       if (req.file) {
-      await delFile(req.params.id); 
+        await delFile(req.params.id); 
       }
       const sauceObject = req.file 
       ? 
@@ -146,22 +147,22 @@ exports.createLike = async (req, res, next) => {
       case 1: 
         if (userLikedIndex === -1) {
           sauce.usersLiked.push(userId);
+          sauce.likes += 1;
           if(flagUserExist) { 
             sauce.usersDisliked.splice(userDisLikedIndex, 1); 
             sauce.dislikes -= 1; 
           }
         }
-        sauce.likes += 1;
       break;
       case -1: 
         if (userDisLikedIndex === -1) {
           sauce.usersDisliked.push(userId);
+          sauce.dislikes += 1;
           if(flagUserExist) { 
             sauce.usersLiked.splice(userLikedIndex, 1);
             sauce.likes -= 1; 
           }
         }
-        sauce.dislikes += 1;
       break;
       case 0: 
         if(flagUserExist){

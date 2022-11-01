@@ -6,23 +6,23 @@ let mdpRegExp = new RegExp ('^[A-Za-zÀ-ÖØ-öø-ÿ0-9 -]{2,60}$');
 require("dotenv").config();
 
 exports.signup = async (req, res, next) => {
-  try {
-    let hash = await bcrypt.hash(req.body.password, 10);
-    const user = new User({
-        email: req.body.email,
-        password: hash,
+    try {
+        let hash = await bcrypt.hash(req.body.password, 10);
+        const user = new User({
+            email: req.body.email,
+            password: hash,
         });
-    if (emailRegExp.test(req.body.email) && mdpRegExp.test(req.body.password)){
-        user.save()         
-        res.status(201).json({ message: "Utilisateur créé !" })
-    } else {
-        res.status(401).json ({ message: "Email ou mot de passe invalide..." })
+        if (emailRegExp.test(req.body.email) && mdpRegExp.test(req.body.password)){
+            user.save()         
+            res.status(201).json({ message: "Utilisateur créé !" })
+        } else {
+            res.status(401).json ({ message: "Email ou mot de passe invalide..." })
+        }
+    } catch(e) {
+        res.status(500).json({
+            error: e.message,
+        });
     }
-  } catch(e) {
-    res.status(500).json({
-      error: e.message,
-    });
-  }
 };
 
 
@@ -50,9 +50,9 @@ exports.login = async (req, res, next) => {
                 { expiresIn: "24h" }
                 ),
             });
-    } catch(e) {
-        res.status(500).json({
-            error: e.message,
-        });
-    }
-};
+        } catch(e) {
+            res.status(500).json({
+                error: e.message,
+            });
+        }
+    };

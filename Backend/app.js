@@ -6,13 +6,9 @@ const app = express();
 const sauceRoutes = require('./routes/sauce');
 const userRoutes = require("./routes/user");
 const path = require("path");
-//const multer = require("./middleware/multer-config");
-//var upload = multer();
+
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
-//app.use(upload.array());
-//app.use(express.static("public"));
-//app.use(express.json());
 
 
 mongoose.connect('mongodb+srv://Bauwst:JB27UUKX@cluster0.7e3lnda.mongodb.net/?retryWrites=true&w=majority',
